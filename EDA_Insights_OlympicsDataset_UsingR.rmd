@@ -1,0 +1,459 @@
+---
+title: "Assignment_DataVisualization_CA3_StoryTelling"
+author: "Pranav_Deogaonkar"
+date: "09/01/2020"
+output:
+  word_document:
+    toc: yes
+    toc_depth: '2'
+  html_document:
+    code_folding: show
+    highlight: tango
+    number_sections: yes
+    toc: yes
+    toc_depth: 2
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r cars}
+
+```
+
+# 1. Introduction - 
+
+  The modern Olympic games are considered to be an elite global sports event which comprises of summer and winter sports contests. Thousands of athletes participate in the Olympics across the globe in vivid competitions. The Olympic games are conducted every four years, alternating of summer and winter Olympics with two years apart. The International Olympic Committee(IOC) was founded by "Baron Pierre de Coubertin" in 1894. Thus, the foundation for modern Olympic games was laid in 1896.(En.wikipedia.org, 2020)
+  
+
+  
+  
+  Ancient Olympics:
+  
+  Modern Olympics are influenced by the ancient Olympic Games, held in Olympia, Greece during the period from 8th century BC to the 4th century AD. These games were religious and athletic fiesta for the Greeks. Competitions were among different delegates of city-states and kingdoms of ancient Greece.(En.wikipedia.org, 2020)
+  
+  Modern Olympic Games:
+  
+   Under the patronage of IOC first Games were held in Athens in 1896. Evangelos Zappas was a pioneer leader in establishing the Modern Olympic Games. (En.wikipedia.org, 2020)
+   
+   This brings us to a thought that from 1896 till now how have the Olympics changed and in what manner.
+  
+# 2. Rationale :
+   
+   We will investigate into evolution of Olympic Games from the 19th century till  the 21st century.
+   
+# 3. Dataset & variables
+
+   Dataset we have obtained from kaggle, which is "120 years of Olympic history: athletes and results".It consists of two csv files named as "athlete_events.csv" and "noc_regions.csv". The athelete_events file contains data of all participants from 1896 to 2016 olympic games such as :
+   Name
+   Personal Traits : Sex,Age,Height and Weight
+   Participant Country Details: Team,NOC,Region
+   Games Details: Year,Games(held at Summer/Winter),Season
+   Competetions: Sport,Event
+   Host City: City
+   Outcome of Competetion: Medal
+   
+  (Kaggle.com, 2020)
+
+ 
+
+# 4. Research Question/s:
+
+  To address the research question of how has Olympics evolved from the initial Industrial Revolution era to Information era. We will formulate sub research questions as below:
+  
+   1. How has participation of athletes changed over the years.
+   2. Is there difference in participation as per Gender at Olympic events
+   3. Differences in Summer and Winter olympics across the period
+   4. Relationship of Age and Height versus Achievement at olympics throughout the  timeframe .
+   5. Is there any change in popularity of Olympic games across the era.
+   
+   
+
+```{r pressure, echo=FALSE}
+```
+
+# 5. Data Analysis
+```{r pressure, echo=FALSE}
+
+```
+```{r}
+
+```
+
+
+```{r}
+library(ggplot2)
+library(gridExtra)
+library(dplyr)
+```
+
+## 5.1 Importing data from "athlete_event" and "noc_regions" csv files and checking the dataframe structure and variables
+```{r}
+olympics_dataframe <- read.csv("D://Submissions//RLab//Assignment3//120-years-of-olympic-history-athletes-and-results//athlete_events.csv",header = TRUE,sep = ",",stringsAsFactors = FALSE)
+
+regions <- read.csv("D://Submissions//RLab//Assignment3//120-years-of-olympic-history-athletes-and-results//noc_regions.csv",header = TRUE,sep = ",",stringsAsFactors = FALSE)
+
+View(olympics_dataframe)
+#str(olympics_dataframe)
+#summary(olympics_dataframe)
+```
+## 5.2 Performing Data transformation :
+
+```{r}
+# Converting variables "Sex" and "Season" to factor variables
+
+olympics_dataframe <- olympics_dataframe%>%mutate_at(vars("Sex","Season"),funs(factor))
+#str(olympics_dataframe)  
+```
+
+## 5.3 Participation of athletes over time period from 1st Athens Olympics to 2016 Rio olympics
+```{r}
+# Participation of athletes over time period from 1st Athens Olympics to 2016 Rio olympics
+
+Participants_Year <- olympics_dataframe%>%group_by(Year)%>%summarise(Participants_Year = n_distinct(ID))
+plot_year <- ggplot(data=Participants_Year,aes(x=Year,y=Participants_Year))+geom_point(size=2,colour="green")+geom_line(colour="red")+theme_bw()+
+  theme(plot.title = element_text(face = "bold",colour = "blue"))+
+  labs(title = "Participation at Olympic games from 1896 to 2016",x="Time Period",y="Participants")
+plot_year
+
+
+
+```
+
+## 5.4 Effects of 1972 turmoil at Munich Olympics 
+
+### As per below results after computation, the athlete participation count has reduced from 1500(Combined count of top 3 countries with largest partcipant count) to 1300 to 1100 from 1972, 1976 and 1980 Olympics.
+   
+   
+```{r}
+olympics_dataframe <- olympics_dataframe%>%left_join(regions, by = "NOC")
+
+
+munich_participation <- olympics_dataframe%>%filter(Games == "1972 Summer")%>%group_by(region)%>%summarise(Munich_part = n_distinct(ID))%>%mutate(Country_max_part = min_rank(desc(Munich_part)))%>%filter(Country_max_part %in% c("1":"3"))%>%mutate(No_Participants_Munich = sum(Munich_part))
+
+munich_participation
+
+canada_participation <- olympics_dataframe%>%filter(Games == "1976 Summer")%>%group_by(region)%>%summarise(canada_part = n_distinct(ID))%>%mutate(Country_max_part = min_rank(desc(canada_part)))%>%filter(Country_max_part %in% c("1":"3"))%>%mutate(No_Participants_canada = sum(canada_part))
+canada_participation
+
+russia_participation <- olympics_dataframe%>%filter(Games == "1980 Summer")%>%group_by(region)%>%summarise(russia_part = n_distinct(ID))%>%mutate(Country_max_part = min_rank(desc(russia_part)))%>%filter(Country_max_part %in% c("1":"3"))%>%mutate(No_Participants_russia = sum(russia_part))
+
+russia_participation
+
+
+
+
+
+plot_1 <- ggplot(data=munich_participation,aes(x=munich_participation$No_Participants_Munich,y=Munich_part,fill=munich_participation$region)) + geom_point(aes(colour=munich_participation$region))+scale_x_continuous(limits = c(0,1500))+theme_bw()+
+  theme(plot.title = element_text(face = "bold",colour = "blue",size = 6))+
+  labs(title = "Athlete count from top 3 countries at 1972 Munich Olympic event ",x="Summation of participant count from top 3 countries ",y="Participants")
+plot_1
+
+
+plot_2 <- ggplot(data=canada_participation,aes(x=canada_participation$No_Participants_canada,y=canada_part,fill=canada_participation$region)) + geom_point(aes(colour=canada_participation$region)) +scale_x_continuous(limits = c(0,1500))+theme_bw()+
+  theme(plot.title = element_text(face = "bold",colour = "blue",size = 6))+
+  labs(title = "Athlete count from top 3 countries at 1976 Canada Olympic event ",x="Summation of participant count from top 3 countries ",y="Participants")
+plot_2
+
+plot_3 <- ggplot(data=russia_participation,aes(x=russia_participation$No_Participants_russia,y=russia_part,fill=russia_participation$region)) + geom_point(aes(colour=russia_participation$region)) +scale_x_continuous(limits = c(0,1500))+theme_bw()+
+  theme(plot.title = element_text(face = "bold",colour = "blue",size = 6))+
+  labs(title = "Athlete count from top 3 countries at 1980 Russia Olympic event ",x="Summation of participant count from top 3 countries ",y="Participants")
+plot_3
+
+
+
+grid.arrange(plot_1,plot_2,plot_3,nrow=3)
+```
+
+## 5.5 Participation of athletes across time period as per gender:
+
+```{r}
+
+participation_olympics <- olympics_dataframe%>%group_by(Year,Sex)%>%summarise(No_Participants =n_distinct(ID))
+(participation_olympics)
+
+plot <- ggplot(participation_olympics,aes(x=Year,y=No_Participants,group = Sex,fill = Sex,size = No_Participants,color= Sex))+ geom_point(alpha=0.8)+theme_bw()+
+  theme(plot.title = element_text(face = "bold",colour = "blue",size = 9))+
+  labs(title = "Participation of Sportsmen across time period based on gender")
+plot
+```
+
+## 5.6 Participation of athletes as per season
+```{r}
+#Participation of athletes as per season
+Athlete_Participation_Season <- olympics_dataframe%>%group_by(Year,Season,NOC)%>%summarise(Athletes_As_Per_Season= n_distinct(ID))
+Athlete_Participation_Season
+
+Athlete_plot <- ggplot(Athlete_Participation_Season,aes(x=Year,color=Season,group=Season),alpha=0.5)+geom_histogram(aes(fill=Season),position = "dodge",binwidth = 3)+scale_fill_manual(values=c("blue","orange"))+theme_bw()+
+  theme(plot.title = element_text(face = "bold",colour = "orange",size = 9))+
+  labs(title = "Participation of athletes at Summer and Winter Olympics",x="Time Period",y="Participants")
+Athlete_plot
+```
+
+
+## 5.7 Relationship of height of athletes and their success rate at Olympic events for Male participants
+
+
+### As per below computation, it can be seen that the success rate to win medal at olympic events for male participants may be dependent on height of participants.
+```{r}
+# Does Height affect your chances to win a medal at Olympics ?
+
+
+# Male participation:
+  Male_Participation_Height <- olympics_dataframe%>%filter(Sex=="M",Height >mean(!is.na(olympics_dataframe$Height)),Medal%in%c("Gold","Silver","Bronze"))%>%summarise(Successful_Atheltes_M = n_distinct(ID))%>%mutate(Proportion_SuccessfulMales = Successful_Atheltes_M/n_distinct(olympics_dataframe$ID)*100)
+
+Male_Participation_Height
+
+Male_Participation_Won <- olympics_dataframe%>%filter(Sex=="M",Medal%in%c("Gold","Silver","Bronze"))%>%summarise(Successful_Atheltes_M = n_distinct(ID))%>%mutate(Proportion_SuccessfulMales = Successful_Atheltes_M/n_distinct(olympics_dataframe$ID)*100)
+
+Male_Participation_Won
+
+
+plot_Male_Successful_Height <- ggplot(Male_Participation_Height,aes(x=n_distinct(olympics_dataframe$ID),y=Proportion_SuccessfulMales)) + geom_count(colour="blue") +scale_y_continuous(limits = c(0,20))+ theme_bw()+
+  theme(plot.title = element_text(face = "bold",colour = "blue",size=6))+
+  labs(title = "Proportion of awarded male athletes who have above average height ",x="Total Participant count over the years ",y="Percentage of Awarded male atheltes")
+plot_Male_Successful_Height
+
+plot_Male_Successful <- ggplot(Male_Participation_Won,aes(x=n_distinct(olympics_dataframe$ID),y=Proportion_SuccessfulMales)) + geom_count(colour="green") +scale_y_continuous(limits = c(0,20))+ theme_bw() +
+  theme(plot.title = element_text(face = "bold",colour = "blue",size=6))+
+  labs(title = "Proportion of awarded male athletes irrespective of height criteria ",x="Total Participant count over the years ",y="Percentage of Awarded male atheltes")
+plot_Male_Successful
+
+grid.arrange(plot_Male_Successful_Height,plot_Male_Successful,ncol=2)
+
+
+
+```
+
+## 5.8 Relationship of height of athletes and their success rate at Olympic events for Female participants
+
+```{r}
+#Female participation:
+  Female_Participation_Height <- olympics_dataframe%>%filter(Sex=="F",Height >mean(!is.na(olympics_dataframe$Height)),Medal%in%c("Gold","Silver","Bronze"))%>%summarise(Successful_Atheltes_F = n_distinct(ID))%>%mutate(Proportion_Sucessful_Females = Successful_Atheltes_F/n_distinct(olympics_dataframe$ID)*100)
+
+Female_Participation_Height
+
+Female_Participation_Won <- olympics_dataframe%>%filter(Sex=="F",Medal%in%c("Gold","Silver","Bronze"))%>%summarise(Successful_Atheltes_F = n_distinct(ID))%>%mutate(Proportion_Sucessful_Females = Successful_Atheltes_F/n_distinct(olympics_dataframe$ID)*100)
+
+Female_Participation_Won
+
+plot_Female_Successful_Height <- ggplot(Female_Participation_Height,aes(x=n_distinct(olympics_dataframe$ID),y=Proportion_Sucessful_Females)) + geom_count(colour="red") +scale_y_continuous(limits = c(0,20)) + theme_bw()+
+  theme(plot.title = element_text(face = "bold",colour = "blue",size=6))+
+  labs(title = "Proportion of awarded female athletes who have above average height ",x="Total Participant count over the years ",y="Percentage of Awarded female atheltes")
+plot_Female_Successful_Height
+
+plot_Female_Successful <- ggplot(Female_Participation_Won,aes(x=n_distinct(olympics_dataframe$ID),y=Proportion_Sucessful_Females)) + geom_count(colour="yellow") +scale_y_continuous(limits = c(0,20)) + theme_bw()+
+  theme(plot.title = element_text(face = "bold",colour = "blue",size=6))+
+  labs(title = "Proportion of awarded female athletes irrespective of height criteria ",x="Total Participant count over the years ",y="Percentage of Awarded female atheltes")
+plot_Female_Successful
+
+grid.arrange(plot_Female_Successful_Height,plot_Female_Successful,ncol=2)
+
+
+```
+
+
+## 5.9 Is age a barrier to win in the Olympics events.
+
+
+
+```{r}
+# Does Age have an effect on participation and wining formula of athletes in Olympics
+
+
+olympics_dataframe <- olympics_dataframe%>%mutate(Age_Group = case_when(Age >= 10 & Age <= 18 ~ 'Youth',
+                                                  Age >= 19 & Age <= 36 ~ 'Athletes Under 35',
+                                                  Age >= 37 & Age <= 50 ~ 'Athletes Under 50',                                                   
+                                                  Age >= 51 & Age <= 75 ~'Athletes Under 75',
+                                                  Age >= 76 & Age <100 ~ 'Senior Atheletes' ))
+
+#str(olympics_dataframe)
+olympics_dataframe$Age_Group <- as.factor(olympics_dataframe$Age_Group)
+#str(olympics_dataframe)
+
+Age_Plot <- olympics_dataframe%>%filter(!is.na(Age_Group),Medal %in% c("Gold","Silver","Bronze"))%>%ggplot(aes(Year,fill=Age_Group))+geom_area(alpha=0.4,aes(color=Age_Group),stat= "bin",bins = 15)+scale_fill_manual(values=c("blue","yellow","green","brown","red"))+theme_bw()+
+  theme(plot.title = element_text(face = "bold",colour = "blue",size = 12))+
+  labs(title = "Age wise distribution of participants who have received medal at olympic events",x="Time Period",y="Successful Athletes")
+Age_Plot
+```
+
+
+```{r}
+
+Age_Distribution <- olympics_dataframe%>%filter(!is.na(Age_Group),Medal %in% c("Gold","Silver","Bronze"))%>%group_by(Age_Group)%>%summarise(No_Participants_Agewise = n())
+Age_Distribution
+```
+
+
+## 5.10 Country wise performance at London 2012 Summer Olympic Games
+```{r }
+# Medals received by various countries in 2012
+
+Medals_2012 <- olympics_dataframe%>%filter(Year=="2012",!is.na(Medal))%>%group_by(NOC,Medal)%>%summarise(No_medals =length(Medal))%>%group_by(NOC)%>%mutate(top_25 = min_rank(desc(sum(No_medals))))%>%filter(between(top_25,1,25))
+
+Medals_2012
+Medals_2012$NOC <- as.factor(Medals_2012$NOC)
+
+Medal_plot <- ggplot(Medals_2012, aes(x=Medals_2012$NOC, y=No_medals,fill=Medal)) +
+  geom_col() +
+  coord_flip() +
+  scale_fill_manual(values=c("gold4","gold","gray70")) +
+  theme(
+     
+     axis.text.y = element_text(size=3,angle=3),plot.title = element_text(face = "bold",colour = "blue",size = 12)) +theme_bw()+
+  
+  labs(title = "Accolades achieved by various countries at London 2012 Olympics ",x=" ",y="Countries")+coord_polar(theta = "x")
+  
+  Medal_plot
+```
+
+
+## 5.11 Cities that have hosted the Olympics:
+
+```{r}
+Host_City_Times <- olympics_dataframe%>%group_by(City,Games)%>%summarise(Host_City_Count = n_distinct(City))%>%group_by(City,Host_City_Count)%>%summarise(Number_Olympics_Held =sum(Host_City_Count))
+
+Host_Allcities <- ggplot(Host_City_Times,aes(x=City,y=Number_Olympics_Held,fill=City))+geom_col()+coord_flip()+ theme_bw()+
+  theme(plot.title = element_text(face = "bold",colour = "blue",size = 9))+
+  labs(title = "Number of Times Cities across the world have hosted Olympic Games ",x="Cities which have hosted olympics",y="Number of times")
+Host_Allcities
+```
+
+
+##  Cities around the world that have bid and won to host olympics more than once
+
+```{r}
+Host_City <- olympics_dataframe%>%group_by(City,Games)%>%summarise(Host_City_Count = n_distinct(City))%>%group_by(City,Host_City_Count)%>%summarise(Number_Olympics_Held =sum(Host_City_Count))%>%filter(Number_Olympics_Held>1)
+Host_City
+
+
+
+Host_City_plot <- ggplot(Host_City,aes(x=City,y=Number_Olympics_Held,fill=City))+geom_col()+ theme_bw()+
+  theme(plot.title = element_text(face = "bold",colour = "blue"))+
+  labs(title = "Cities where Olympics have been held multiple times ")
+Host_City_plot
+
+```
+
+
+
+## 5.12  5 Trending Summer and Winter Olympic games before 1995:
+```{r}
+
+#Which are the top 5 popular sports in Summer and Winter Olympics in terms of participation for the sport from time period 1896 to 1994:
+
+olympics_sport_atheletes <- olympics_dataframe%>%filter(Season=="Summer", between(Year,1896,1994))%>%group_by(Sport)%>%summarise(Athletes_Per_Sport = n_distinct(Name))%>%mutate(pop_sport = min_rank(desc(Athletes_Per_Sport)))%>%filter(pop_sport %in% c("1":"5"))%>%arrange(pop_sport)
+
+olympics_sport_atheletes
+
+olympics_sport_atheletes_Winter <- olympics_dataframe%>%filter(Season=="Winter", between(Year,1896,1994))%>%group_by(Sport)%>%summarise(Athletes_Per_Sport = n_distinct(Name))%>%mutate(pop_sport = min_rank(desc(Athletes_Per_Sport)))%>%filter(pop_sport %in% c("1":"5"))%>%arrange(pop_sport)
+
+olympics_sport_atheletes_Winter
+```
+
+
+```{r}
+Sport_plot <- olympics_sport_atheletes%>%ggplot(aes(x="Sports",y=Athletes_Per_Sport,fill=Sport))+geom_col(alpha=0.3,aes(fill= Sport))+scale_fill_brewer(palette = "Set1")+theme_bw()+
+  theme(plot.title = element_text(face = "bold",colour = "blue",size=9))+
+  labs(title = "Top 5 popular sports at Summer Olympic games",x="Sports",y="Participants for particular sport")
+Sport_plot
+
+Sport_plot_Winter <- olympics_sport_atheletes_Winter%>%ggplot(aes(x="Sports",y=Athletes_Per_Sport,fill=Sport))+geom_col(alpha=0.3,aes(fill= Sport))+scale_fill_brewer(palette = "Set1")+theme_bw()+
+  theme(plot.title = element_text(face = "bold",colour = "blue",size=9))+
+  labs(title = "Top 5 popular sports at Winter Olympic games",x="Sports",y="Participants for particular sport")
+Sport_plot_Winter
+
+grid.arrange(Sport_plot,Sport_plot_Winter,ncol=2)
+
+```
+
+
+
+## 5.13 Trending Summer and Winter Olympic games from 1995 to recent Rio Olympics
+```{r}
+
+#Which are the top 5 popular sports in Summer and Winter Olympics in terms of participation for the sport from time period 1995 to 2016
+
+olympics_sport_atheletes_recent <- olympics_dataframe%>%filter(Season=="Summer", between(Year,1995,2016))%>%group_by(Sport)%>%summarise(Athletes_Per_Sport = n_distinct(Name))%>%mutate(pop_sport = min_rank(desc(Athletes_Per_Sport)))%>%filter(pop_sport %in% c("1":"5"))%>%arrange(pop_sport)
+
+olympics_sport_atheletes
+
+olympics_sport_atheletes_Winter_recent <- olympics_dataframe%>%filter(Season=="Winter", between(Year,1995,2016))%>%group_by(Sport)%>%summarise(Athletes_Per_Sport = n_distinct(Name))%>%mutate(pop_sport = min_rank(desc(Athletes_Per_Sport)))%>%filter(pop_sport %in% c("1":"5"))%>%arrange(pop_sport)
+
+olympics_sport_atheletes_Winter_recent
+
+```
+
+
+
+
+
+```{r}
+
+Sport_plot_recent <- olympics_sport_atheletes_recent%>%ggplot(aes(x="Sports",y=Athletes_Per_Sport,fill=Sport))+geom_col(alpha=0.3,aes(fill= Sport))+scale_fill_brewer(palette = "Set1")+theme_bw()+
+  theme(plot.title = element_text(face = "bold",colour = "blue",size=9))+
+  labs(title = "Top 5 popular sports at Summer Olympic games",x="Sports",y="Participants for particular sport")
+Sport_plot_recent
+
+Sport_plot_Winter_recent <- olympics_sport_atheletes_Winter_recent%>%ggplot(aes(x="Sports",y=Athletes_Per_Sport,fill=Sport))+geom_col(alpha=0.3,aes(fill= Sport))+scale_fill_brewer(palette = "Set1")+theme_bw()+
+  theme(plot.title = element_text(face = "bold",colour = "blue",size=9))+
+  labs(title = " Top 5 popular sports at Winter Olympic games",x="Sports",y="Participants for particular sport")
+Sport_plot_Winter_recent
+
+grid.arrange(Sport_plot_recent,Sport_plot_Winter_recent,ncol=2)
+
+```
+
+
+#  6.  Insights:
+ 
+ 1. Over the years, participants at Olympics are increasing except for few years in history.
+ 2. Country representatives for Summer Olympics are more than twice as compared to Winter Olympics due to lesser Olympic events held during Winter Olympics.
+ 3. Participation of Women now and also in coming years will be on similar level as Men, which was not seen earlier.
+ 4. Age plays a vital role in becoming an Olympic medalist.
+ 5. The USA and European Nations dominate on accolades achieved.
+ 6. Change in popular sports at Olympic events over time.
+ 7. Height of athltes seems to be a factor contributing to winning formula at Olympics especially among women participants.
+
+# 7. References:
+   
+
+   En.wikipedia.org. (2020). Olympic Games. [online] Available at:     https://en.wikipedia.org/wiki/Olympic_Games
+   
+   Kaggle.com. (2020). Datasets | Kaggle. [online] Available at: https://www.kaggle.com/datasets
+   
+   International Olympic Committee. (2020). Olympics | Olympic Games, Medals, Results, News | IOC. [online] Available at: https://www.olympic.org/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
